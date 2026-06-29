@@ -1,29 +1,73 @@
-CREATE DATABASE ONLINE_RETAIL;
-USE ONLINE_RETAIL;
-CREATE TABLE product
-(
-product_id INT PRIMARY KEY,
-product_name VARCHAR(50),
-category VARCHAR(50),
-price DECIMAL(10,2)
+CREATE DATABASE EmployeeManagement;
+USE EmployeeManagement;
+CREATE TABLE Department(
+DepartmentID INT PRIMARY KEY,
+DepartmentName VARCHAR(100)
 );
-INSERT INTO product (product_id,product_name,category,price) VALUES
-(101, 'Laptop Pro', 'Electronics', 95000),
-(102, 'Gaming Laptop', 'Electronics', 90000),
-(103, 'Smartphone X', 'Electronics', 90000),
-(104, 'Tablet', 'Electronics', 45000),
-(201, 'Office Chair', 'Furniture', 15000),
-(202, 'Wooden Table', 'Furniture', 30000),
-(203, 'Luxury Sofa', 'Furniture', 50000),
-(204, 'Bookshelf', 'Furniture', 30000),
-(301, 'T-Shirt', 'Clothing', 1200),
-(302, 'Jeans', 'Clothing', 2500),
-(303, 'Jacket', 'Clothing', 5000),
-(304, 'Sweater', 'Clothing', 5000);
+CREATE TABLE Employee(
+	EmployeeID INT PRIMARY KEY,
+    FirstName VARCHAR(50),
+    LastName VARCHAR(50),
+    DepartmentID INT,
+    Salary DECIMAL(10,2),
+    JoinDate DATE,
+    FOREIGN KEY (DepartmentID) REFERENCES Department(DepartmentID)
+);
+INSERT INTO Department(DepartmentID, DepartmentName)
+VALUES
+(1, 'Human Resources'),
+(2, 'Information Technology'),
+(3, 'Finance'),
+(4, 'Marketing');
+INSERT INTO Employee
+(EmployeeID, FirstName, LastName, DepartmentID, Salary, JoinDate)
+VALUES
+(101, 'John', 'Doe', 1, 45000.00, '2023-01-10'),
+(102, 'Alice', 'Smith', 2, 60000.00, '2022-05-15'),
+(103, 'David', 'Johnson', 3, 55000.00, '2021-09-20'),
+(104, 'Emily', 'Brown', 2, 70000.00, '2020-07-01');
 
-SELECT * FROM product;
-/* Ranking Query */
-SELECT * FROM (SELECT product_id,product_name,category,price, row_number() OVER (partition by category order by price DESC) AS row_num,
-RANK() OVER ( partition by category order by price DESC) AS rank_num, 
-DENSE_RANK() OVER (partition by category order by price DESC) AS dense_rank_num FROM product) ranked_products
-WHERE row_num<=3 order by category,row_num;
+DELIMITER $$
+
+CREATE PROCEDURE sp_GetEmployeesByDepartment(IN p_DepartmentID INT)
+BEGIN
+    SELECT *
+    FROM Employee
+    WHERE DepartmentID = p_DepartmentID;
+END $$
+
+DELIMITER ;
+
+-- Execute Procedure
+CALL sp_GetEmployeesByDepartment(2);
+
+-- Stored Procedure to Insert Employee
+DELIMITER $$
+
+CREATE PROCEDURE sp_InsertEmployee(
+    IN p_EmployeeID INT,
+    IN p_FirstName VARCHAR(50),
+    IN p_LastName VARCHAR(50),
+    IN p_DepartmentID INT,
+    IN p_Salary DECIMAL(10,2),
+    IN p_JoinDate DATE
+)
+BEGIN
+    INSERT INTO Employee
+    (EmployeeID, FirstName, LastName, DepartmentID, Salary, JoinDate)
+    VALUES
+    (p_EmployeeID, p_FirstName, p_LastName, p_DepartmentID, p_Salary, p_JoinDate);
+END $$
+
+DELIMITER ;
+
+CALL sp_InsertEmployee(
+    105,
+    'Michael',
+    'Taylor',
+    1,
+    65000.00,
+    '2024-02-15'
+);
+
+SELECT * FROM Employee;
